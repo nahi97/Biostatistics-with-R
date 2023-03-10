@@ -1,0 +1,46 @@
+---
+title: "Homework 6 submitted by Md Nahian Imtiaz Hasan"
+author: "Stefan Konigorski"
+date: "November 23, 2022"
+output:
+  html_document: default
+---
+
+Download this R Markdown file, save it on your computer, and perform all the below tasks by inserting your answer in text or by inserting R chunks below. After you are done, upload this file with your solutions on Moodle.
+
+## Exercise 1: Statistical tests
+
+a) In the KiGGS dataset, perform a 2-sample t-test for paired samples (i.e. dependent samples) for the two variables 'sys1' and 'sys2'. Interpret the results.
+
+
+```{r}
+dat_link <- url("https://www.dropbox.com/s/pd0z829pv2otzqt/KiGGS03_06.RData?dl=1")
+load(dat_link)
+dat <- KiGGS03_06
+x<- dat$sys1
+y<-dat$sys2
+x<-na.omit(x)
+y<-na.omit(y)
+t.test(as.numeric(x), as.numeric(y))
+
+```
+b) In the KiGGS dataset, select one metric and one binary variable (or create one) and perform a 2-sample t-test. Then do a  with the same variables, explore the function to do this, and compare the results to the t-test.
+
+#Sex will be the binary variable I use and 
+```{r}
+binny<-dat$sex
+summary(binny)
+t.test(as.numeric(x), as.numeric(binny))
+```
+
+## Exercise 2: Study planning (optional)
+
+Compute the sample size using R or G*Power, for a study that investigates the question if biking to the HPI is associated with concentration in class or not.
+
+Think about how you can formulate this study question in terms of variables, and which statistical test (that we have covered in class 6) would be appropriate for this.
+
+a) Which test could you use?
+
+# Answer: Hypothesis Testing can be used. We can collect data about students who bike and those who don't. Then we can create another variable which will ask if they can concentrate in the class. The null hypothesis test would be that there is no correlation between biking and concentration. The alternative one could consider if they worked hard the previous night or if they were out partying or drinking. 
+
+b) Which sample size is necessary, to find a true effect with 80\% power at $\alpha=0.05$ using this statistical test?

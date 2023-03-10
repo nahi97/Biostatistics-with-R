@@ -1,0 +1,105 @@
+---
+title: "Homework 8 submitted by Md Nahian Imtiaz Hasan"
+author: "Stefan Konigorski"
+date: "December 7, 2022"
+output:
+  html_document: default
+---
+
+Download this R Markdown file, save it on your computer, and perform all the below tasks by inserting your answer in text or by inserting R chunks below. After you are done, upload this file with your solutions on Moodle.
+
+## Exercise 1: Correlation
+
+
+
+```{r}
+dat_link <- url("https://www.dropbox.com/s/pd0z829pv2otzqt/KiGGS03_06.RData?dl=1")
+load(dat_link)
+dat <- KiGGS03_06
+```
+a) In the KiGGS dataset, compute the Pearson and Spearman correlation coefficient for the two variables 'sys1' and 'sys2' and hypothesis tests whether the two variables are associated or not. Interpret the results, and decide which of the two coefficients you would report in your analysis and why.
+
+```{r}
+# Here for 2 metric variables:
+sbp1 <- as.numeric(as.character(dat$sys1))
+sbp2 <- as.numeric(as.character(dat$sys2))
+
+# computing correlations
+cor(data.frame(sbp1, sbp2), use = "complete.obs")
+#Correlation is high.
+
+cor(data.frame(sbp1, sbp2), use = "complete.obs", method = "pearson")
+#Correlation is high.
+cor(data.frame(sbp1, sbp2), use = "complete.obs", method = "spearman")
+#Correlation is high.
+#There is not much difference between the two two coefficients. 
+
+# calculate confidence intervals and perform hypothesis test:
+cor.test(sbp1, sbp2, use = "complete.obs",method = "spearman")
+cor.test(sbp1, sbp2, use = "complete.obs",method = "pearson")
+# -> both p-values are very small, i.e. reject null hypothesis, conclude that the correlation is different from 0.
+plot(data.frame(sbp1, sbp2))
+```
+```{r}
+# which results to report? -> look at qqplot:
+qqnorm(sbp1); qqline(sbp1)
+qqnorm(sbp2); qqline(sbp1)
+
+```
+```{r}
+hist(sbp1)
+hist(sbp2)
+```
+# -> both are metric variables, and approx. normally distributed. Hence report Pearson correlation coefficient.
+
+b) Optional: Compute confidence intervals of the correlation coefficient estimates from part a). Note: for confidence intervals of the Spearman coefficient, you need another function.
+
+```{r}
+# 95% confidence intervals for Pearson's correlation coefficient:
+cor.test(sbp1, sbp2, use = "complete.obs", method = "pearson")$conf.int[1:2]
+# -> very tight around the point estimate; with 95% certainty the true correlation is between 0.84 and 0.85
+```
+```{r}
+# get confidence intervals for Spearmans Rho:
+#install.packages("RVAideMemoire")
+installed.packages("RVAideMemoire")
+spearman.ci(sbp1, sbp2, nrep = 1000, conf.level = 0.95)
+# similar to Pearson, but slightly shifted (around Spearman correlation) and CI is slightly wider
+```
+## Exercise 2: Linear regression
+
+a) Predict sys2 by sys1 using a simple linear regression, and interpret the results.
+
+```{r}
+res1 <- lm(sbp2 ~ sbp1)
+summary(res1)
+hist(sbp2) #seeing if its normally distributed.
+```
+#Explanation: The estimates (Estimate) for the model parameters – the value of the y-intercept is 16.828706 and the estimated effect of sbp1 on sbp2 is 0.826940. The P value is 2.2e-16 which is almost zero,which will indicate whether the model fits the data well. From these results, we can say that there is a significant positive relationship between sys1 and sys2.
+
+
+> Interpretation:
+> 
+> - Regression coefficient of sbp1 (=slope of regression line) is 0.83, i.e. for every unit of that sbp1 (mmHg) increases, the model predicts that sbp2 (of the same child) increases (on average) by 0.83 units.
+> - The p-value of the hypothesis test whether that coefficient is 0 (or not) is very small: conclude that there is an association between sbp1 and sbp2.
+> - R^2 = 0.72 -> 72% of the variance of sbp2 can be explained by sbp1, ie this is a good model!
+
+b) Add age2 and sex as predictors to the linear regression model above, and interpret the results. 
+```{r}
+sbp22 <- as.numeric(as.character(dat$age2))
+sbp23 <- as.numeric(as.character(dat$sex))
+res2 <- lm(sbp2 ~ sbp1 + dat$sex + dat$age2)
+summary(res2)
+```
+#Explanation: The estimates (Estimate) for the model parameters – the value of the y-intercept is 16.828706 and the estimated effect of sbp1 on sbp2 is 0.826940. The P value is 2.2e-16 which is almost zero,which will indicate whether the model fits the data well. 
+## Exercise 3: Visualization of regression (optional)
+
+Use the functions in ggplot2 to compute a scatter plot and insert the regression line of the analysis in exercise 2a.
+
+
+```{r}
+
+ggplot(data = dat, aes(x = sbp1, y = sbp2)) + 
+  geom_point(color='red') +
+  geom_smooth(method = "lm", se = FALSE)
+```

@@ -1,0 +1,42 @@
+---
+title: "Homework 7 submitted by Md Nahian Imtiaz Hasan"
+author: "Stefan Konigorski"
+date: "November 30, 2022"
+output:
+  html_document: default
+---
+
+Download this R Markdown file, save it on your computer, and perform all the below tasks by inserting your answer in text or by inserting R chunks below. After you are done, upload this file with your solutions on Moodle.
+
+## Preparations
+
+Load KiGGS data:
+
+```{r}
+dat_link <- url("https://www.dropbox.com/s/pd0z829pv2otzqt/KiGGS03_06.RData?dl=1")
+load(dat_link)
+kiggs <- KiGGS03_06
+```
+
+## Exercise 1: Multiple imputation
+
+a) In the KiGGS dataset, choose 2 metric variables of your choice.
+```{r}
+x<- kiggs$e024z1 #Cold Infection
+y<-kiggs$E014z #Weight gain in childbirth
+head(y)
+```
+b) Compute the correlation between these two variables
+
+```{r}
+summary(x)
+summary(y)
+table(!is.na(as.numeric(as.character(x))))
+table(!is.na(as.numeric(as.character(y))))
+
+table(!is.na(as.numeric(as.character(x))) & !is.na(as.numeric(as.character(y))))
+hist(as.numeric(as.character(x)))
+hist(as.numeric(as.character(y)))
+```
+c) Perform a multiple imputation using the mice function with the 'pmm' method and otherwise default settings.
+d) Compute the correlation again on the multiple imputed datasets.

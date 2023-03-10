@@ -1,0 +1,266 @@
+---
+title: "Final Assignment by Md Nahian Imtiaz Hasan"
+author: "Nahian"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+
+## R Markdown
+
+
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#Question 2 - Import, extract and save data [6 points]
+#Downloading the SPSS data file KiGGS03_06.sav from moodle and import it into R. [2 points]
+
+`````{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+#install.packages("foreign")
+library(foreign)
+mydata <- read.spss("KiGGS03_06.sav", to.data.frame = TRUE)
+```
+
+
+
+
+#Create a new dataframe in R named kiggs, which contains all variables (and only these) for the analysis (E070M, E070V, E072, E074, arztZ01, sex, age2, schichtz, e065z). [3 points]
+```{r}
+library(foreign)
+
+kiggs <- subset(mydata, select=c("E070M", "E070V", "E072","E074","arztZ01","sex","age2","schichtz","e065z"))
+```
+#Run the formatting steps in the provided Rmd file data_formatting.Rmd. Save this formatted dataframe on your computer, e.g. on your desktop. [1 point]
+
+```{r}
+
+kiggs$E070M    <- factor(kiggs$E070M,    labels = c("yes, daily", "yes, occasionally", "no"))
+kiggs$E070V    <- factor(kiggs$E070V,    labels = c("yes, daily", "yes, occasionally", "no"))
+kiggs$E072     <- factor(kiggs$E072,     labels = c("yes, regularly", "yes, from time to time", "no, never"))
+kiggs$E074     <- factor(kiggs$E074,     labels = c("yes, regularly", "yes, from time to time", "no, never", "has not breastfed"))
+kiggs$sex      <- factor(kiggs$sex,      labels = c("boys", "girls"))
+kiggs$age2     <- factor(kiggs$age2,     labels = c("0-1y", "2-3y", "4-5y", "6-7y", "8-9y", "10-11y", "12-13y", "14-15y", "16-17y"))
+kiggs$schichtz <- factor(kiggs$schichtz, labels = c("low social status", "medium social status", "high social status"))
+
+#Saving this formatted dataframe on my computer
+
+write.csv(kiggs,'kiggs.csv')
+
+#Or
+
+save(kiggs, file = "kiggs.RData")
+
+```
+
+
+#Question 3 - Data transformations and data checks [10 points]
+
+#a
+#Check that the variables E070M, E070V, E072, E074 are all factors. If they are not,transform them into factors. [2 points]
+#Conclusion: Yes,they are all factor variables.
+```{r}
+
+is.factor((kiggs$E070M))
+is.factor(kiggs$E070V)
+is.factor(kiggs$E072)
+is.factor(kiggs$E074)
+
+```
+#Set the value "has not breastfed" of variable E074 to NA for all children. [1 point]
+```{r}
+table(kiggs$E074)
+kiggs$E074   <- factor(kiggs$E074, labels = c("yes, regularly", "yes, from time to time","no, never","NA"))
+table(kiggs$E074)
+
+```
+#Delete this now empty factor level from the variable. [1 point]
+```{r}
+
+# Remove the NA values using is.na() function
+#kiggs$E074<-kiggs$E074[!is.na(kiggs$E074)]
+#Error in `$<-.data.frame`(`*tmp*`, E074, value = c(3L, 3L, 3L, 3L, 4L, : replacement has 17043 rows, data has 17640
+#Commented out the line for the error.
+```
+#Checking whether these two steps worked as intended. [1 point]
+```{r}
+levels(kiggs$E074) #"has not breastfed" of variable E074 was successfully set to NA
+#Second task wan not done.
+```
+
+```{r}
+
+library(dplyr)
+
+# Example data frame with four variables
+burden <- data.frame(kiggs$E070M,kiggs$E070V,kiggs$E072,kiggs$E074)
+
+# Calculate ranks of the four variables
+df_ranks <- burden %>%
+  mutate(var1_rank = rank(kiggs$E070M),
+         var2_rank = rank(kiggs$E070V),
+         var3_rank = rank(kiggs$E072),
+         var4_rank = rank(kiggs$E074))
+
+df_ranks <- df_ranks %>%
+  mutate(burdenS = var1_rank + var2_rank + var3_rank + var4_rank)
+
+
+
+```
+>It can be said that the higher the value of burdenS,the higher the combined effect of 4 variables combined.A conclusion about which one has more impact can not be reached just yet.
+#b:Add this variabes burdenS to the dataset kiggs, and save it in its updated form as an RData file (overwrite the previous file). [2 points]
+```{r}
+
+kiggs <- bind_cols(kiggs, df_ranks$burdenS)
+save(kiggs, file = "kiggs.RData")
+#Since the variable was saved as ...10,I changed it's name to burdenS in the Kiggs df.
+colnames(kiggs)[10] ="burdenS"
+kiggs[10]
+```
+
+#Question 4 - Descriptive statistics [12 points]
+#Calculate absolute frequency tables for age2, sex, burdenS, and mean + standard deviation for arztZ01. 
+#Display them in a table or describe them in continuous text.[8 points]
+```{r}
+table(kiggs$age2)
+knitr::kable(table(kiggs$age2), col.names = c('Age Group', 'Frequency'),caption = "Absolute frequency for age2")
+
+table(kiggs$sex)
+knitr::kable(table(kiggs$sex), col.names = c('Gender', 'Frequency'),caption = "Absolute frequency for sex")
+#table(kiggs$burdenS) #I am commenting out this output as it ruins the beauty of the HTML file.
+
+mean(kiggs$arztZ01,na.rm = TRUE)
+knitr::kable(mean(kiggs$arztZ01,na.rm = TRUE),col.names=c('Mean'))
+sd(kiggs$arztZ01,na.rm = TRUE)
+knitr::kable(sd(kiggs$arztZ01,na.rm = TRUE),col.names=c('Standard Deviation'))
+
+```
+
+#Also indicate how many missing values each of these 4 variables has, and how many observations have complete data for these 4 variables. [4 points]
+```{r}
+
+table(is.na(kiggs$age2)) #
+table(is.na(kiggs$sex)) #Zero missing values for sex.
+table(is.na(kiggs$burdenS))
+table(is.na(kiggs$arztZ01))  
+
+nrow(kiggs) #There are 17640 records in this dataframe. 
+table(complete.cases(kiggs$age2,kiggs$sex,kiggs$burdenS,kiggs$arztZ01)) #694 incomplete observations because that's how many missing values are for arztZ01 variable.
+```
+
+>Answer:
+
+>Zero missing values for age2.
+
+>Zero missing values for burdenS 
+
+>Zero missing values for sex
+
+>694 NA values for arztZ01.
+
+>694 incomplete observations because that's how many missing values are for arztZ01 variable.
+
+
+#Question 5 - Linear Regression [12 points]
+#a.Calculate a linear regression, with arztZ01 as outcome and the predictors burdenS, sex,age2, schichtz and e065z. [2 points]
+```{r}
+table(kiggs$arztZ01)
+
+# Creating the linear regression model
+model01 <- lm(as.numeric(arztZ01) ~ as.numeric(burdenS) + sex + age2 + schichtz + as.numeric(e065z), data = kiggs)
+
+```
+#Check for each predictor how you take it into the regression model (factor, ordinal or metric) and justify for each variable why you did it that way (e.g. because the variable has the measurement level xyz) [3 points].
+
+```{r}
+
+table(kiggs$arztZ01) 
+#table(kiggs$burdenS) 
+table(kiggs$sex) 
+table(kiggs$age2) 
+table(kiggs$schichtz) 
+table(kiggs$e065z) 
+```
+>arztZ01  is a metric variable.
+
+>burdenS is also a metric variable,as it's the sum of ranks. 
+
+>sex is a binary factor variable.kiggs$age2 is a factor variable with 9 categories values. 
+
+>schichtz is an ordinal variable with 3 levels,as it represents social status. 
+
+>e065z is a metric variable,as it represents total hours of sleep per day.
+
+#To answer the question of whether the smoking behavior of parents has an influence on the health of children, adjusting for possible influencing factors, consider the significance test of the regression coefficient of burdenS in this regression.
+
+```{r}
+
+# Viewing summary of the model
+summary(model01)
+confint(model01,level=0.95)
+```
+>Interpretetion:
+>Regression coefficient of burdenS (=slope of regression line) is -3.649e-06,which means that for every unit of that burdenS increases, the model predicts that arztZ01 decreases (on average) by 3.649e-06 units.
+
+>In this case, an adjusted R-squared of 0.1565 means that approximately 15.65% of the variance in the outcome variable (arztZ01) can be explained by the predictors included in the model (burdenS, sex, age2, schichtz, and e065z) after adjusting for the number of predictors. This indicates that the model explains a relatively small amount of the variation in the outcome variable, suggesting that there may be other important factors not included in the model that could explain the remaining variability. However, the adjusted R-squared should always be interpreted in conjunction with other measures of model fit and should not be used in isolation to judge the quality of the model.
+
+>The 95% confidence interval for the regression coefficient of burdenS is [-1.054953e-05, 3.251048e-06],which is very close to zero.
+
+>The p-value of the hypothesis test whether that coefficient is < 2.2e-16,which is very small: concluding that there is an association between burdenS and arztZ01. But it's on the opposite direction.
+
+
+>Conclusion: There is a slight/insignificant association between burdenS and arztZ01. But it's on the opposite direction.
+
+#c)Since there is evidence that individuals drawn from the same area are correlated with each other, but we are not interested in the effect of the area on the health ... what would be a suitable strategy for accounting for this correlation?
+
+>If there is evidence of correlation between individuals drawn from the same area, a suitable strategy to account for this correlation is to use a mixed-effects regression model. In this type of model, both fixed effects (like burdenS, sex, age2, schichtz, and e065z) and random effects (like the effect of the area) are included in the model.By including a random effect for the area in the model, we can account for the correlation between individuals from the same area without being interested in the effect of the area on health outcomes. This will allow us to estimate the effects of the other variables while controlling for the correlation within areas.To specify a mixed-effects regression model in R, we can use the lme4 package. The syntax for specifying a mixed-effects model is similar to that of a standard linear regression model, but with the addition of a random effect. The lmer function is used to specify a mixed-effects model.
+
+
+#Question 6 – Sample size calculation [10 points]
+
+#a) Look at the literature or think for yourself based on expert knowledge what effect size you would expect. State the effect size that you are assuming and explain why.
+
+> The effect size is a measure of the magnitude of the difference or association between two groups or variables. It is an important component of sample size calculations because it determines the sample size required to detect a statistically significant effect. In this case, the effect size of interest is the difference in birth weight between babies born to women who smoke 10 cigarettes per day during pregnancy and those who do not smoke at all.
+Based on the literature, previous studies have reported that smoking during pregnancy is associated with a reduction in birth weight of approximately 200-250 grams compared to babies born to non-smoking mothers (Leonard et al., 2018; Zhang et al., 2020). Therefore, I would assume an effect size of 225 grams, which represents the midpoint of this range. This effect size is considered clinically meaningful and is commonly used in sample size calculations for studies investigating the effect of smoking during pregnancy on birth weight.
+It is important to note that the assumed effect size should be based on a careful review of the literature or expert knowledge, as an incorrect assumption of effect size can lead to an underpowered or overpowered study.
+
+
+#b.Choose an appropriate statistical model for the sample size calculation and explain why.
+>For the sample size calculation, a common statistical model used is the two-sample t-test. The two-sample t-test compares the means of two groups and determines if they are significantly different. In this case, the two groups would be pregnant women smoking 10 cigarettes per day and pregnant women not smoking at all. The model assumes that the outcome variable (birth weight) is normally distributed in both groups and that the variances of the two groups are equal.
+
+>The two-sample t-test is appropriate for this sample size calculation because it is a standard method for comparing means between two groups, and it allows us to estimate the sample size needed to detect a specific difference in means with a desired level of power and significance. Additionally, since we are assuming a normal distribution of birth weight in both groups, the two-sample t-test is appropriate for this type of continuous outcome variable.
+
+#Now compute the minimum necessary sample size for a power of 80% and a significance threshold of alpha = 0.05, for example by using a function in the R package pwr. What is the sample size? [3 points]
+```{r}
+library(pwr)
+
+d <- 0.25 
+power <- 0.80
+sig.level <- 0.05
+
+pwr.t.test(d = d, power = power, sig.level = sig.level, type = "two.sample", alternative = "two.sided")
+
+```
+>So, we need a minimum sample size of 143 individuals per group (smokers and non-smokers) to achieve a power of 80% and a significance level of 0.05, assuming an effect size of 0.25.
+
+
+#Do you think this is a good study, or do you see any major weaknesses in the study design?
+
+
+>Here are some potential weaknesses in the study design that could affect the quality of the results:
+
+>Study design: The study is described as an observational study, which means that the exposure to smoking is not manipulated by the researcher, and there may be other factors that influence birth weight that are not accounted for. A randomized controlled trial would be a more robust study design to establish causality.
+
+>Smoking exposure: The study assumes that smoking ten cigarettes per day is the only relevant factor that affects birth weight, but there may be other factors that could also influence birth weight, such as maternal nutrition, stress, or medical conditions.
+
+>Sample size: The sample size calculation is based on a specific effect size assumption, but the effect size may be overestimated or underestimated. A larger sample size may be necessary to achieve adequate statistical power.
+
+>Confounding factors: The study does not specify how the potential confounding factors will be accounted for in the analysis, such as maternal age, education, socioeconomic status, or medical history. The failure to account for these factors could lead to biased estimates of the effect of smoking on birth weight.
+
+
+

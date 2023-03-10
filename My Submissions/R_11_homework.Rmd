@@ -1,0 +1,113 @@
+---
+title: "Homework 11 submitted by Md Nahian Imtiaz Hasan"
+author: "Stefan Konigorski"
+date: "January 18, 2023"
+output:
+  html_document: default
+---
+
+Download this R Markdown file, save it on your computer, and perform all the below tasks by inserting your answer in text or by inserting R chunks below. After you are done, upload this file with your solutions on Moodle.
+
+For all exercises, use the KiGGS dataset.
+
+## Exercise 1: Analysis of variance
+
+Choose serum glucose levels (GLUCX) as outcome variable of interest, the factors BMI group (bmiKH) and sex (sex), and physical wellbeing (kw100.e) as quantitative covariate (=metric variable), and compute 5 ANOVA models: (i-ii) one model with each factors separately, (iii) one model with both factors, (iv) one model with both factors and their interaction, (v) one model with both factors, their interaction, and the covariate.
+
+Choose at least one aspect that you observed in the results and write one sentence on the interpretation of this results. For example, you can write about: Write which factor is associated with the outcome? Is there a significant interaction effect? Does anything change after adjusting for the covariate?
+
+```{r}
+# Preparation
+dat_link <- url("https://www.dropbox.com/s/pd0z829pv2otzqt/KiGGS03_06.RData?dl=1")
+load(dat_link)
+dat <- KiGGS03_06
+dat$GLUCX <- as.numeric(as.character(dat$GLUCX))
+dat$kw100.e <- as.numeric(as.character(dat$kw100.e))
+dat$bmiKH <- factor(dat$bmiKH, labels = c("strong underweight", "underweight", "normal weight", "overweight", "obese"))
+dat$sex <- factor(dat$sex, labels = c("boys", "girls"))
+```
+#1.Choose serum glucose levels (GLUCX) as outcome variable of interest, the factor BMI group (bmiKH)
+```{r}
+hist(dat$GLUCX)
+#Looks somewhat normal.
+# Descriptive statistics:
+tapply(dat$GLUCX, dat$bmiKH, mean, na.rm = TRUE)
+table(dat$bmiKH)
+fit01 <- aov(GLUCX ~ bmiKH, data = dat)
+fit01
+summary(fit01)
+predict(fit01, data.frame(bmiKH = levels(dat$bmiKH)[-1]))
+
+```
+#F Value is greater than P value.The lower the F value,the closer the samples are to the mean.
+
+#2. Choose serum glucose levels (GLUCX) as outcome variable of interest, the factor sex (sex)
+
+```{r}
+hist(dat$GLUCX)
+#Looks somewhat normal.
+# Descriptive statistics:
+tapply(dat$GLUCX, dat$sex, mean, na.rm = TRUE)
+fit02 <- aov(GLUCX ~ sex, data = dat)
+fit02
+summary(fit02)
+predict(fit02, data.frame(sex = levels(dat$sex)[-1]))
+
+```
+#In the 2nd model,F value is much bigger compared to the 1st one.The higher the F-value,the more evidence there is that the difference between groups is large compared to within groups.
+
+#3.  one model with both factors bmiKH and sex
+```{r}
+# Descriptive statistics:
+tapply(dat$GLUCX, dat$bmiKH, mean, na.rm = TRUE)
+tapply(dat$GLUCX, dat$sex, mean, na.rm = TRUE)
+tapply(dat$GLUCX, list(dat$bmiKH, dat$sex), mean, na.rm = TRUE)
+
+# ANOVA:
+fit03 <- aov(GLUCX ~ bmiKH + sex, data = dat)
+summary(fit03)
+#For Boys
+predict(fit03, data.frame(bmiKH = levels(dat$bmiKH)[1], sex = levels(dat$sex)[1]))  #levels(dat$sex)[1] is "boys"
+#For Girls
+predict(fit03, data.frame(bmiKH = levels(dat$bmiKH)[1], sex = levels(dat$sex)[2]))  #levels(dat$sex)[2] is "Girls"
+tapply(dat$GLUCX, list(dat$bmiKH, dat$sex), mean, na.rm = TRUE)
+```
+#In the 3rd model,the F value for BMI is much smaller compared to that for Sex. In general,the results are close to the mean. 
+
+#4.one model with both factors and their interaction
+
+```{r}
+# ANOVA:
+fit04 <- aov(GLUCX ~ bmiKH + sex+bmiKH:sex, data = dat)
+summary(fit04)
+
+```
+#In the 4th model, the F-value for bmiKHH:sex is pretty close to that of the P-value,which means the samples are pretty close to the mean.
+
+#5.One model with both factors, their interaction, and the covariate.
+```{r}
+# Preparation
+data_for_analysis2 <- data.frame(GLUCX = dat$GLUCX, bmiKH = dat$bmiKH, sex = dat$sex, kw100.e = dat$kw100.e)
+data_for_analysis2 <- data_for_analysis2[complete.cases(data_for_analysis2),]
+data_for_analysis2 <- droplevels(data_for_analysis2)
+
+```
+
+```{r}
+# ANOVA:
+fit05 <- aov(GLUCX ~ kw100.e + bmiKH + sex + bmiKH:sex, data = data_for_analysis2)
+summary(fit05)
+```
+#For the 5th model,the F-value for bmiKHH:sex is pretty close to that of the P-value,which means the samples are pretty close to the mean.The next one which has a closer F-value to it's P-value is bmiKH.
+## Exercise 2: Posthoc tests in analysis of variance (optional)
+
+Perform posthoc t-tests with and without a correction for multiple testing for the ANOVA in exercise 1, where we tested whether systolic blood pressure differed between age groups.
+
+```{r}
+# Preparation
+dat_link <- url("https://www.dropbox.com/s/pd0z829pv2otzqt/KiGGS03_06.RData?dl=1")
+load(dat_link)
+dat <- KiGGS03_06
+dat$age2 <- factor(dat$age2, labels = c("0-1y", "2-3y", "4-5y", "6-7y", "8-9y", "10-11y", "12-13y", "14-15y", "16-17y"))
+```
+

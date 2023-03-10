@@ -1,0 +1,56 @@
+---
+title: "Homework 13 submitted by Md Nahian Imtiaz Hasan"
+author: "Stefan Konigorski"
+date: "February 1, 2023"
+output:
+  html_document: default
+---
+
+Download this R Markdown file, save it on your computer, and perform all the below tasks by inserting your answer in text or by inserting R chunks below. After you are done, upload this file with your solutions on Moodle.
+
+## Exercise 1: Survival analysis
+
+Choose one other provided dataset in the survival package (or any other suitable dataset) which contains time-to-event data. Use the survfit function to compute the Kaplan-Meier estimate of the survival function and plot it. Then choose a variable with 2 or more categories in the dataset and perform a log-rank test. Interpret the results: is there are difference in survival between the groups?
+
+```{r}
+# Loading the survival package and the lung cancer data
+library(survival)
+lung
+data(cancer, package="survival")
+#Formatting the data for analysis
+lung$sex <- factor(lung$sex, labels = c("male", "female"))
+lung$status <- lung$status - 1
+
+
+# Computing the Kaplan-Meier estimate of the survival function
+fit001 <- survfit(Surv(time, status) ~ 1, data = lung)
+
+# Plotting the Kaplan-Meier estimate
+plot(fit001, xlab = "Time (days)", ylab = "Survival Probability")
+
+# Performing a log-rank test
+fit002 <- survfit(Surv(time, status) ~ sex, data = lung)
+plot(fit002, xlab = "Time (days)", ylab = "Survival Probability")
+summary(fit002, test = "logrank")
+
+
+# Computing the Kaplan-Meier estimate of the survival function for weight loss
+fit003 <- survfit(Surv(wt.loss, status) ~ 1, data = lung)
+plot(fit003,xlab = "Weight Loss",ylab = "Survival Probability")
+#Not a good idea TO use weight loss variable in my opinion.
+```
+```{r}
+#Computing and plotting the Kaplan-Meier estimate of the survival function
+
+fit004 <- survfit(Surv(meal.cal, status) ~ 1, data = lung)
+plot(fit004,xlab = "Calories Consumed",ylab = "Survival Probability")
+# Performing a log-rank test
+fit005 <- survfit(Surv(meal.cal, status) ~ sex, data = lung)
+plot(fit005, xlab = "Calories Taken", ylab = "Survival Probability")
+summary(fit005, test = "logrank")
+fit005
+```
+
+```{r}
+
+```
